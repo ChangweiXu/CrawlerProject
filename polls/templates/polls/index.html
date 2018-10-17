@@ -1,0 +1,56 @@
+
+{% if latest_question_list %}
+    <ul>
+    {% for question in latest_question_list %}
+        <li><a href="/polls/{{ question.id }}/">{{ question.question_text }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No polls are available.</p>
+{% endif %}
+
+
+
+<!--
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>我的第一段 JavaScript</h1>
+
+<p>请输入数字。如果输入值不是数字，浏览器会弹出提示框。</p>
+
+<input id="demo" type="text">
+
+<script>
+function myFunction()
+{
+	var x=document.getElementById("demo").value;
+	if(x==""||isNaN(x))
+		{
+			alert("Not Numeric");
+		}
+}
+</script>
+
+<button type="button" onclick="myFunction()">点击这里</button>
+
+</body>
+</html>
+-->
+
+<!--
+<html>
+
+<body>
+
+<h4>一个无序列表：</h4>
+<ul>
+  <li>{{data_one}}</li>
+  <li>{{data_two}}</li>
+  <li>{{data_thr}}</li>
+</ul>
+
+</body>
+</html>
+-->

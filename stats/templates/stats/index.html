@@ -1,0 +1,496 @@
+<!-- demo 2018.09.08更新
+版权归yyf所有
+此页面展示了
+已更新
+1.近7日紫宁微博 阅读 互动 社会影响力 爱慕值 四个维度的数据（已展示）（根据新浪早10点更新数据为基准）
+2.近7日紫宁 赖美云 杨超越 杨芸晴 4人之间的各项指标对比（已展示）（根据新浪早10点更新数据为基准）
+
+待更新
+3.当日（0：00-24:00）实时互动数增长估计：根据近30日明星微博 转+赞+评+明星评论他人或自己内容的赞+回复 在当日0:00-当前的数据*2 （初步计划 以2分钟为抓取间隔）
+4.实时送花增长（初步计划5分钟为抓取间隔） -->
+
+<!--
+	发生改变的行数：L220 左右
+	-->
+
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>紫宁数据站</title>
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+	<script src="http://cdn.hcharts.cn/highcharts/highcharts.js"></script>
+	<script src="http://cdn.hcharts.cn/highcharts/modules/exporting.js"></script>
+</head>
+<body>
+	<!--页面结构-->
+	<ul class="tab">
+	<li class="tab-item active">阅读数</li>
+	<li class="tab-item">互动数</li>
+	<li class="tab-item">社会影响力</li>
+	<li class="tab-item">爱慕值</li>
+	</ul>
+	<div class="products">
+		<div class="mod-box selected">
+			<div id="container_blog_read" class="mod-box-content">
+			</div>
+		</div>
+		<div class="mod-box">
+			<div  id="container_interact" class="mod-box-content">
+			</div>
+		</div>
+		<div class="mod-box">
+			<div id="container_mention_search" class="mod-box-content">
+			</div>
+		</div>
+		<div class="mod-box">
+			<div id="container_close" class="mod-box-content">
+			</div>
+		</div>
+	</div>
+	<ul class="tab">
+		<li class="tab-item-2 active">阅读对比</li>
+		<li class="tab-item-2">互动对比</li>
+		<li class="tab-item-2">社影对比</li>
+		<li class="tab-item-2">爱慕对比</li>
+	</ul>
+	<div class="products_2">
+		<div class="mod-box_2 selected">
+			<div id="container_blog_read_compare" class="mod-box-content">
+			</div>
+		</div>
+		<div class="mod-box_2">
+			<div  id="container_interact_compare" class="mod-box-content">
+			</div>
+		</div>
+		<div class="mod-box_2">
+			<div id="container_mention_search_compare" class="mod-box-content">
+			</div>
+		</div>
+		<div class="mod-box_2">
+			<div id="container_close_compare" class="mod-box-content">
+			</div>
+		</div>
+	</div>
+	<!--页面样式-->
+	<style>
+	* {
+	margin: 0;
+	padding: 0;
+	}
+	ul {
+		list-style: none;
+	}
+	.tab {
+		border: 1px solid #ddd;
+		border-bottom: 0;
+		height: 36px;
+		width: 320px;
+	}
+	.tab li {
+		position: relative;
+		float: left;
+		width: 80px;
+		height: 34px;
+		line-height: 34px;
+		text-align: center;
+		cursor: pointer;
+		border-top: 4px solid #fff;
+	}
+	.tab span {
+		position: absolute;
+		right: 0;
+		top: 10px;
+		background: #ddd;
+		width: 1px;
+		height: 14px;
+		overflow: hidden;
+	}
+	.mod-box.selected {
+		display: block;
+	}
+	.mod-box_2.selected{display: block;}
+	.tab li.active {
+		border-color: red;
+		border-bottom: 0;
+	}
+	.mod-box,.mod-box_2 {
+		border-top: 1px solid #e6e6e6;
+		border-bottom: 1px solid #e6e6e6;
+		background-color: #fff;
+		margin-top: 8px;
+	}
+	.mod-box-title {
+		position: relative;
+		height: 35px;
+		text-indent: 13px;
+		font-size: 14px;
+		color: #646464;
+		line-height: 38px;
+		border-bottom: 1px solid #e6e6e6;
+	}
+	.mod-box-title::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: 50%;
+		height: 22px;
+		width: 3px;
+		margin-top: -11px;
+		border-radius: 0 2px 2px 0;
+		background-color: #fd8224;
+	}
+	.mod-box-title::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: 50%;
+		height: 22px;
+		width: 3px;
+		margin-top: -11px;
+		border-radius: 0 2px 2px 0;
+		background-color: #fd8224;
+	}	
+	</style>
+
+	<script type="text/javascript">
+		$(function(){
+		//控制tab切换
+		$(".products .mod-box").eq(0).show().siblings().hide();
+		$(".products_2 .mod-box_2").eq(0).show().siblings().hide();
+		$(".tab-item").click(function () {
+			$(this).addClass("active").siblings().removeClass("active");
+			$(".products .mod-box").eq($(this).index()).show().siblings().hide();
+		})
+		$(".tab-item-2").click(function () {
+			$(this).addClass("active").siblings().removeClass("active");
+			$(".products_2 .mod-box_2").eq($(this).index()).show().siblings().hide();
+		})
+		//统一图表配置
+		var tooltip={
+			xDateFormat:'%Y-%m-%d',
+			shared:true
+		};
+		var xAxis={
+			crosshair:true,
+			type:'datetime'  // x 轴分类
+		};
+		var plotOptions_1={
+			series:{
+				pointStart:Date.UTC(2018,7,22),
+				pointInterval:24*3600*1000
+			}
+		};
+		var plotOptions_2={
+			series:{
+				pointStart:Date.UTC(2018,7,22),
+				pointInterval:24*3600*1000
+			},
+			column: {
+				stacking: 'normal',
+				dataLabels: {
+					enabled: false,
+					color: (Highcharts.theme && Highcharts.theme.dataLabelsColor) || 'white',
+					style: {
+						textShadow: '0 0 3px black'
+					}
+				}
+			},
+			line:{
+				dataLabels: {
+					// 开启数据标签
+					enabled: true          
+				},
+				// 关闭鼠标跟踪，对应的提示框、点击事件会失效
+				enableMouseTracking: false
+			}
+		};
+		var credits={enabled:false};
+		var legend={
+			layout: 'vertical',
+			align: 'right',
+			verticalAlign: 'middle'
+		};
+		//图表变量
+		/*
+			========================================
+			========================================
+			以下为修改的地方：
+			增加后台上传的数据，用一个 var 封装，
+			然后带入到图表变量中去。
+			此前，后台把所有数据组装好然后直接交给前台。
+			========================================
+			========================================
+		 */
+		var read_num = {{ read_num|safe }};
+		var post_num = {{ post_num|safe }};
+		////
+		var blog_read = {
+			title: {
+				text: '70127080'// 标题
+			},
+			xAxis:xAxis,
+			yAxis: [{
+					title: {
+						text: '阅读数'        
+					}
+				},
+				{
+					title:{
+						text:'发博数'
+					},
+					opposite:true
+				}
+			],
+			tooltip:tooltip,
+			plotOptions:plotOptions_1,
+			credits:credits,
+			series: [
+				{
+					name: '阅读数',                       
+					// data: [62338957,62522848,64459770,63234506,62208142,68943101,70127080],// 数据
+					data: read_num,
+					color:'#ffc20e'
+				},
+				{
+					yAxis:1,
+					name:'发博数',
+					// data:[1,0,0,0,0,1,0],
+					data: post_num
+				},
+			]
+		};
+		// 图表
+		var blog_read_compare={
+			title:{text:'7日阅读对比'},
+			xAxis:xAxis,
+			tooltip:tooltip,
+			plotOptions:plotOptions_1,
+			credits:credits,
+			series:[
+				{
+					name:'杨芸晴',
+					data:[],
+					//color:
+				},
+				{
+					name:'杨超越',
+					data:[],
+					//color:
+				},
+				{
+					name:'赖美云',
+					data:[],
+					//color:
+				},
+				{
+					name:'紫宁',
+					data:[62338957,62522848,64459770,63234506,62208142,68943101,70127080],
+					color:'#ffc20e'
+				}
+			],
+			legend: legend
+		};
+		var interact = {
+			title: {
+				text: '175446'// 昨日互动数
+			},
+			xAxis: xAxis,
+			yAxis: [{
+				title: {
+					text: '7日互动'        
+				}
+			}
+				   ],
+			tooltip:tooltip,
+			plotOptions:plotOptions_2,
+			credits:credits,
+			series: [
+				{
+					name:'微博被互动',
+					type:'column',
+					data:[104068,63668,61011,62552,67530,91537,86075],
+				},
+				{
+					name:'评论被互动',
+					type:'column',
+					data:[44631,56017,61011,67217,72955,67772,82431],
+				},
+				{
+					name:'故事被互动',
+					type:'column',
+					data:[0,0,0,0,0,0,6940],
+				},
+				{
+					name: '互动数',                       
+					data: [148681,119685,119581,129769,140485,159309,175446],// 数据
+					color:'#ffc20e'
+				}
+			]
+		};
+		var interact_compare={
+			title:{text:'7日互动对比'},
+			xAxis:xAxis,
+			tooltip:tooltip,
+			plotOptions:plotOptions_1,
+			credits:credits,
+			legend:legend,
+			series:[
+				{
+					name:'杨芸晴',
+					data:[],
+					//color:
+				},
+				{
+					name:'杨超越',
+					data:[],
+					//color:
+				},
+				{
+					name:'赖美云',
+					data:[],
+					//color:
+				},
+				{
+					name:'紫宁',
+					data:[148681,119685,119581,129769,140485,159309,175446],
+					color:'#ffc20e'
+				}
+			]
+		};
+		var mention_search={
+			title: {
+				text: '54620653'// 标题
+			},
+			xAxis: xAxis,
+			yAxis: [{
+				title: {
+					text: '7日社会影响力'        
+				}
+			}
+				   ],
+			tooltip:tooltip,
+			plotOptions:plotOptions_2,
+			credits:credits,
+			series: [
+				{
+					name:'搜索量',
+					type:'column',
+					data:[2843,2423,2331,2655,2714,2481,2694]
+				},
+				{
+					name:'提及他的微博阅读数',
+					type:'column',
+					data:[18392680,21649440,73126134,68692820,57601636,47342043,54617958],
+				},
+				{
+					name:'社会影响力',
+					type:'line',
+					color:'#ffc20e',
+					data:[18395523,21651863,73128465,68695475,57604350,47344524,54620652],
+				}
+			]
+		};
+		var mention_search_compare={
+			title:{text:'7日社会影响力对比'},
+			xAxis:xAxis,
+			tooltip:tooltip,
+			plotOptions:plotOptions_1,
+			credits:credits,
+			legend:legend,
+			series:[
+				{
+					name:'杨芸晴',
+					data:[],
+					//color:
+				},
+				{
+					name:'杨超越',
+					data:[],
+					//color:
+				},
+				{
+					name:'赖美云',
+					data:[],
+					//color:
+				},
+				{
+					name:'紫宁',
+					data:[18395523,21651863,73128465,68695475,57604350,47344524,54620652],
+					color:'#ffc20e'
+				}
+			]
+		};
+		var close={
+			title:{text:'76'},
+			xAxis: xAxis,
+			yAxis: [{
+				title: {
+					text: '7日爱慕值'        
+				}
+			}
+				   ],
+			tooltip:tooltip,
+			plotOptions:plotOptions_1,
+			credits:credits,
+			series:[
+				{
+					name:'送花人数',
+					type:'column',
+					data:[129,80,45,91,27,28,14]
+				},
+				{
+					name:'送花次数',
+					type:'column',
+					data:[134,90,46,97,29,28,14],
+				},
+				{
+					name:'爱慕值',
+					type:'line',
+					color:'#ffc20e',
+					data:[530,988,292,494,184,242,76]
+				}
+			]
+		};
+		var close_compare={
+			title:{text:'7日爱慕值对比'},
+			xAxis:xAxis,
+			tooltip:tooltip,
+			plotOptions:plotOptions_1,
+			credits:credits,
+			legend:legend,
+			series:[
+				{
+					name:'杨芸晴',
+					data:[],
+					//color:
+				},
+				{
+					name:'杨超越',
+					data:[],
+					//color:
+				},
+				{
+					name:'赖美云',
+					data:[],
+					//color:
+				},
+				{
+					name:'紫宁',
+					data:[18395523,21651863,73128465,68695475,57604350,47344524,54620652],
+					color:'#ffc20e'
+				}
+			]
+		};
+		var chart_1 = Highcharts.chart('container_blog_read', blog_read);
+		var chart_2 = Highcharts.chart('container_interact', interact);
+		var chart_3 = Highcharts.chart('container_mention_search', mention_search);
+		var chart_4=Highcharts.chart('container_close',close);
+		var chart_5=Highcharts.chart('container_blog_read_compare',blog_read_compare);
+		var chart_6=Highcharts.chart('container_interact_compare',mention_search_compare);
+		var chart_7=Highcharts.chart('container_mention_search_compare',interact_compare);
+		var chart_8=Highcharts.chart('container_close_compare',close_compare);
+	});
+	</script>
+
+</body>
